@@ -1,30 +1,29 @@
-@startuml sequence-notification
+ @startuml sequence-notification
   title Fluxo de Notificação - FitPlanner
   
+  participant "fit-service" as FS
   participant "calendar-service" as CS
-  participant "goal-service" as GS
   queue "AWS SQS" as SQS
-  participant "notification-service" as NOTIF
+  participant "notification-service" as NS
   database "MongoDB" as DB
+  
+  == Meta próxima do prazo (job agendado) ==
+  
+  FS -> FS: Scheduled job verifica\nmetas com end_date próximo
+  FS -> SQS: publish "goal.deadline.approaching"\n{user_id, goal_title, days_remaining}
+  
+  SQS -> NS: consume
+  NS -> DB: GET notification_preferences
+  alt notificação habilitada
+    NS -> NS: Envia e-mail/push
+    NS -> DB: INSERT notification {status: SENT}
+  end
   
   == Evento de calendário criado ==
   
-  CS -> SQS: publish "event.created"\n{user_id, title, start_date, event_type}
+  CS -> SQS: publish "event.created"\n{user_id, title, start_date}
   
-  SQS -> NOTIF: consume "event.created"
-  NOTIF -> DB: SELECT notification_preferences\nWHERE user_id
-  alt email_enabled = true
-    NOTIF -> NOTIF: Envia e-mail de lembrete
-    NOTIF -> DB: INSERT notifications\n{status: SENT, channel: EMAIL}
-  else email desabilitado
-    NOTIF -> DB: INSERT notifications\n{status: SENT, channel: IN_APP}
-  end
-  
-  == Meta próxima do prazo ==
-  
-  GS -> SQS: publish "goal.deadline.approaching"\n{user_id, goal_title, days_remaining}
-  
-  SQS -> NOTIF: consume "goal.deadline.approaching"
-  NOTIF -> DB: INSERT notifications\n{title: "Sua meta X vence em Y dias"}
+  SQS -> NS: consume
+  NS -> DB: INSERT notification\n{title: "Lembrete: {event.title}"}
   
   @enduml
