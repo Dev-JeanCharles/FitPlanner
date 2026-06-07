@@ -1,0 +1,197 @@
+{
+    "type": "excalidraw",
+    "version": 2,
+    "source": "FitPlanner Architecture",
+    "elements": [
+      {
+        "id": "gateway",
+        "type": "rectangle",
+        "x": 400,
+        "y": 50,
+        "width": 240,
+        "height": 60,
+        "strokeColor": "#2b8a3e",
+        "backgroundColor": "#b2f2bb",
+        "fillStyle": "solid",
+        "roundness": {"type": 3},
+        "label": {"text": "API Gateway\n(Spring Cloud Gateway)\nJWT + Rate Limiting"}
+      },
+      {
+        "id": "bff",
+        "type": "rectangle",
+        "x": 400,
+        "y": 160,
+        "width": 240,
+        "height": 50,
+        "strokeColor": "#e67700",
+        "backgroundColor": "#fff3bf",
+        "fillStyle": "solid",
+        "roundness": {"type": 3},
+        "label": {"text": "BFF Service\n(Composição Frontend)"}
+      },
+      {
+        "id": "user-svc",
+        "type": "rectangle",
+        "x": 80,
+        "y": 300,
+        "width": 200,
+        "height": 70,
+        "strokeColor": "#1864ab",
+        "backgroundColor": "#d0ebff",
+        "fillStyle": "solid",
+        "roundness": {"type": 3},
+        "label": {"text": "user-service\n(Auth + Perfil + Onboarding)\nPostgreSQL | Hexagonal"}
+      },
+      {
+        "id": "fit-svc",
+        "type": "rectangle",
+        "x": 350,
+        "y": 300,
+        "width": 200,
+        "height": 70,
+        "strokeColor": "#1864ab",
+        "backgroundColor": "#d0ebff",
+        "fillStyle": "solid",
+        "roundness": {"type": 3},
+        "label": {"text": "fit-service\n(Treino + Nutrição + Metas)\nPostgreSQL | Hexagonal"}
+      },
+      {
+        "id": "calendar-svc",
+        "type": "rectangle",
+        "x": 620,
+        "y": 300,
+        "width": 200,
+        "height": 70,
+        "strokeColor": "#862e9c",
+        "backgroundColor": "#e5dbff",
+        "fillStyle": "solid",
+        "roundness": {"type": 3},
+        "label": {"text": "calendar-service\n(Eventos + Lembretes)\nMongoDB | Clean"}
+      },
+      {
+        "id": "shopping-svc",
+        "type": "rectangle",
+        "x": 890,
+        "y": 300,
+        "width": 200,
+        "height": 70,
+        "strokeColor": "#862e9c",
+        "backgroundColor": "#e5dbff",
+        "fillStyle": "solid",
+        "roundness": {"type": 3},
+        "label": {"text": "shopping-list-service\n(Listas de Compras)\nMongoDB | Clean"}
+      },
+      {
+        "id": "sqs",
+        "type": "diamond",
+        "x": 430,
+        "y": 450,
+        "width": 160,
+        "height": 80,
+        "strokeColor": "#e67700",
+        "backgroundColor": "#fff3bf",
+        "fillStyle": "solid",
+        "label": {"text": "AWS SQS"}
+      },
+      {
+        "id": "notification-svc",
+        "type": "rectangle",
+        "x": 380,
+        "y": 590,
+        "width": 240,
+        "height": 70,
+        "strokeColor": "#c92a2a",
+        "backgroundColor": "#ffe3e3",
+        "fillStyle": "solid",
+        "roundness": {"type": 3},
+        "label": {"text": "notification-service\n(E-mail + Push + In-App)\nMongoDB | Clean"}
+      },
+      {
+        "id": "arrow-gw-bff",
+        "type": "arrow",
+        "x": 520,
+        "y": 110,
+        "points": [[0, 0], [0, 50]],
+        "strokeColor": "#2b8a3e",
+        "strokeWidth": 2,
+        "label": {"text": "HTTP"}
+      },
+      {
+        "id": "arrow-bff-user",
+        "type": "arrow",
+        "x": 400,
+        "y": 210,
+        "points": [[0, 0], [-220, 90]],
+        "strokeColor": "#1864ab",
+        "strokeWidth": 2,
+        "label": {"text": "OpenFeign"}
+      },
+      {
+        "id": "arrow-bff-fit",
+        "type": "arrow",
+        "x": 520,
+        "y": 210,
+        "points": [[0, 0], [0, 90]],
+        "strokeColor": "#1864ab",
+        "strokeWidth": 2,
+        "label": {"text": "OpenFeign"}
+      },
+      {
+        "id": "arrow-bff-calendar",
+        "type": "arrow",
+        "x": 600,
+        "y": 210,
+        "points": [[0, 0], [120, 90]],
+        "strokeColor": "#1864ab",
+        "strokeWidth": 2,
+        "label": {"text": "OpenFeign"}
+      },
+      {
+        "id": "arrow-bff-shopping",
+        "type": "arrow",
+        "x": 640,
+        "y": 210,
+        "points": [[0, 0], [350, 90]],
+        "strokeColor": "#1864ab",
+        "strokeWidth": 2,
+        "label": {"text": "OpenFeign"}
+      },
+      {
+        "id": "arrow-fit-sqs",
+        "type": "arrow",
+        "x": 450,
+        "y": 370,
+        "points": [[0, 0], [60, 80]],
+        "strokeColor": "#e67700",
+        "strokeWidth": 2,
+        "strokeStyle": "dashed",
+        "label": {"text": "goal.deadline.approaching"}
+      },
+      {
+        "id": "arrow-calendar-sqs",
+        "type": "arrow",
+        "x": 720,
+        "y": 370,
+        "points": [[0, 0], [-210, 80]],
+        "strokeColor": "#e67700",
+        "strokeWidth": 2,
+        "strokeStyle": "dashed",
+        "label": {"text": "event.created"}
+      },
+      {
+        "id": "arrow-sqs-notif",
+        "type": "arrow",
+        "x": 510,
+        "y": 530,
+        "points": [[0, 0], [0, 60]],
+        "strokeColor": "#c92a2a",
+        "strokeWidth": 2,
+        "strokeStyle": "dashed",
+        "label": {"text": "consume"}
+      }
+    ],
+    "appState": {
+      "viewBackgroundColor": "#ffffff",
+      "gridSize": 20
+    }
+  }
