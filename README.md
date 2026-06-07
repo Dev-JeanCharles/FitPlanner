@@ -1,3 +1,4 @@
+[Uploading fitplanner-communication.drawio.txt…]()
   # 💪 FitPlanner
   
   Sistema baseado em microsserviços para controle completo de treinos, nutrição, metas e rotina de pessoas que praticam musculação.
@@ -36,13 +37,7 @@
   
   ## Arquitetura
   
-  📎 [`docs/diagrams/fitplanner-communication.excalidraw`](docs/diagrams/fitplanner-communication.excalidraw)
-  
-  > Abra no [excalidraw.com](https://excalidraw.com) (Menu → Open) ou no VS Code com a extensão Excalidraw.
-  
-  ![Diagrama de Arquitetura](docs/diagrams/fitplanner-communication.png)
-  
-  > Exporte o `.excalidraw` como PNG e salve como `fitplanner-communication.png` para renderizar no GitHub.
+  ![Diagrama de Arquitetura](docs/diagrams/fitplanner-communication.drawio.txt.png)
   
   ---
   
