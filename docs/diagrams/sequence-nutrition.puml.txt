@@ -1,39 +1,25 @@
-@startuml sequence-nutrition
-  title Fluxo de Registro Nutricional - FitPlanner
+  @startuml sequence-nutrition
+  title Cliente Registra Nutrição - FitPlanner
   
   actor Cliente
   participant "API Gateway" as GW
-  participant "nutrition-service" as NS
+  participant "fit-service" as FS
   database "PostgreSQL" as DB
-  queue "AWS SQS" as SQS
-  participant "goal-service" as GS
   
-  == Registrar refeição ==
-  
-  Cliente -> GW: POST /api/nutrition/meals\n{meal_type, description,\ncalories, protein, carbs, fat}
-  GW -> NS: forward (JWT validated)
-  NS -> DB: SELECT daily_nutrition_logs\nWHERE user_id AND log_date = today
-  alt Log não existe
-    NS -> DB: INSERT daily_nutrition_logs
-  end
-  NS -> DB: INSERT meals
-  NS -> DB: UPDATE daily_nutrition_logs\n(recalcula totais do dia)
-  NS -> SQS: publish "nutrition.updated"\n{user_id, log_date, totals}
-  NS --> GW: 201 Created
-  GW --> Cliente: 201 Created {meal}
+  Cliente -> GW: POST /api/fit/nutrition/meals\n{meal_type, description,\ncalories, protein, carbs, fat}
+  GW -> FS: forward (JWT validated)
+  FS -> DB: UPSERT daily_nutrition_logs (cria se não existe)
+  FS -> DB: INSERT meals
+  FS -> DB: UPDATE daily_nutrition_logs (recalcula totais)
+  FS --> GW: 201 Created {meal}
+  GW --> Cliente: 201 Created
   
   == Registrar água ==
   
-  Cliente -> GW: PATCH /api/nutrition/water\n{amount_ml}
-  GW -> NS: forward
-  NS -> DB: UPDATE daily_nutrition_logs\nSET water_ml += amount_ml
-  NS --> GW: 200 OK {water_ml total}
+  Cliente -> GW: PATCH /api/fit/nutrition/water\n{amount_ml: 300}
+  GW -> FS: forward
+  FS -> DB: UPDATE daily_nutrition_logs\nSET water_ml += 300
+  FS --> GW: 200 OK {water_ml: 2100}
   GW --> Cliente: 200 OK
-  
-  == Goal-service reage ==
-  
-  SQS -> GS: consume "nutrition.updated"
-  GS -> GS: Recalcula progresso\nda meta atual
-  GS -> GS: Verifica se meta\nfoi atingida ou está em risco
   
   @enduml

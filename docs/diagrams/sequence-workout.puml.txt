@@ -1,43 +1,37 @@
- @startuml sequence-workout
-  title Fluxo de Registro/Alteração de Treino - FitPlanner
+  @startuml sequence-workout
+  title Cliente Cria seu Treino - FitPlanner
   
   actor Cliente
   participant "API Gateway" as GW
-  participant "workout-service" as WS
+  participant "fit-service" as FS
   database "PostgreSQL" as DB
   
-  == Criar divisão de treino ==
-  
-  Cliente -> GW: POST /api/workouts/splits\n{name, description}
-  GW -> WS: forward (JWT validated)
-  WS -> DB: INSERT workout_splits
-  WS --> GW: 201 Created {split_id}
+  Cliente -> GW: POST /api/fit/splits\n{name, description}
+  GW -> FS: forward (JWT validated)
+  FS -> DB: INSERT workout_splits
+  FS --> GW: 201 Created {split}
   GW --> Cliente: 201 Created
   
-  == Adicionar dia de treino ==
-  
-  Cliente -> GW: POST /api/workouts/splits/{id}/days\n{day_of_week, muscle_group}
-  GW -> WS: forward
-  WS -> DB: INSERT workout_days
-  WS --> GW: 201 Created {day_id}
+  Cliente -> GW: POST /api/fit/splits/{id}/days\n{day_of_week, muscle_group}
+  GW -> FS: forward
+  FS -> DB: INSERT workout_days
+  FS --> GW: 201 Created {day}
   GW --> Cliente: 201 Created
   
-  == Adicionar exercício ==
-  
-  Cliente -> GW: POST /api/workouts/days/{id}/exercises\n{name, sets, reps, rest_seconds}
-  GW -> WS: forward
-  WS -> DB: INSERT exercises
-  WS --> GW: 201 Created
+  Cliente -> GW: POST /api/fit/days/{id}/exercises\n{name, sets, reps, rest_seconds}
+  GW -> FS: forward
+  FS -> DB: INSERT exercises
+  FS --> GW: 201 Created {exercise}
   GW --> Cliente: 201 Created
   
-  == Alterar exercício (com histórico) ==
+  == Alteração de exercício ==
   
-  Cliente -> GW: PUT /api/workouts/exercises/{id}\n{name, sets, reps, change_reason}
-  GW -> WS: forward
-  WS -> DB: SELECT exercício atual
-  WS -> DB: INSERT exercise_history\n(snapshot do estado anterior)
-  WS -> DB: UPDATE exercises\n(novos valores)
-  WS --> GW: 200 OK
-  GW --> Cliente: 200 OK {exercise updated}
+  Cliente -> GW: PUT /api/fit/exercises/{id}\n{name, sets, reps, change_reason}
+  GW -> FS: forward
+  FS -> DB: INSERT exercise_history (snapshot anterior)
+  FS -> DB: UPDATE exercises (novos valores)
+  FS --> GW: 200 OK
+  GW --> Cliente: 200 OK
   
   @enduml
+  

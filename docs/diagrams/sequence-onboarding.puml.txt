@@ -1,13 +1,9 @@
- @startuml sequence-onboarding
-  title Fluxo de Onboarding - FitPlanner
+@startuml sequence-onboarding
+  title Fluxo de Registro + Onboarding - FitPlanner
   
   actor Cliente
   participant "API Gateway" as GW
   participant "user-service" as US
-  queue "AWS SQS" as SQS
-  participant "workout-service" as WS
-  participant "nutrition-service" as NS
-  participant "goal-service" as GS
   
   Cliente -> GW: POST /api/users/register\n{name, email, cpf, password}
   GW -> US: forward request
@@ -15,24 +11,19 @@
   US --> GW: 201 Created {token}
   GW --> Cliente: 201 Created {token}
   
-  == Onboarding (após primeiro login) ==
+  == Onboarding (primeiro acesso) ==
   
-  Cliente -> GW: POST /api/users/onboarding\n{age, gender, height, weight,\nactivity_level, goal_type}
+  Cliente -> GW: POST /api/users/me/onboarding\n{age, gender, height_cm,\nweight_kg, activity_level}
   GW -> US: forward (JWT validated)
   US -> US: Salva UserProfile\nonboarding_completed = true
-  US -> SQS: publish "onboarding.completed"\n{user_id, height, weight,\nactivity_level, goal_type}
-  US --> GW: 200 OK
-  GW --> Cliente: 200 OK {profile}
+  US --> GW: 200 OK {profile}
+  GW --> Cliente: 200 OK
   
-  == Consumidores processam em paralelo ==
-  
-  SQS -> WS: consume "onboarding.completed"
-  WS -> WS: Cria divisão de treino\npadrão baseado no goal_type
-  
-  SQS -> NS: consume "onboarding.completed"
-  NS -> NS: Cria nutrition_targets\nbaseado em peso/altura/atividade
-  
-  SQS -> GS: consume "onboarding.completed"
-  GS -> GS: Cria metas mensais iniciais\nbaseado no goal_type
+  note right of Cliente
+    Após o onboarding o cliente
+    é redirecionado para o dashboard
+    onde ele mesmo cria seus treinos,
+    registra nutrição e define metas.
+  end note
   
   @enduml
