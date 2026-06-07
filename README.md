@@ -1,4 +1,4 @@
- # 💪 FitPlanner
+  # 💪 FitPlanner
   
   Sistema baseado em microsserviços para controle completo de treinos, nutrição, metas e rotina de pessoas que praticam musculação.
   
@@ -11,6 +11,8 @@
   - [Microsserviços](#microsserviços)
   - [Stack Tecnológica](#stack-tecnológica)
   - [Comunicação entre Serviços](#comunicação-entre-serviços)
+  - [Modelo de Dados](#modelo-de-dados)
+  - [Contratos de API](docs/api-contracts.md)
   - [ADRs — Decisões Arquiteturais](#adrs--decisões-arquiteturais)
   - [Como Executar](#como-executar)
   - [Roadmap](#roadmap)
@@ -19,40 +21,42 @@
   
   ## Visão Geral
   
-  O FitPlanner oferece:
+  O FitPlanner é uma ferramenta de controle onde **o cliente gerencia tudo**:
   
-  - **Controle de treinos** — divisão de treinos, exercícios por dia, histórico de alterações
-  - **Registro nutricional** — calorias, macros, controle de água
-  - **Metas mensais** — cálculo inteligente baseado nos dados nutricionais do usuário
-  - **Calendário** — exames nutricionais, consultas, eventos importantes
-  - **Lista de compras** — semanal ou mensal
-  - **Notificações** — lembretes de metas, eventos e prazos
-  - **Onboarding** — plano personalizado criado automaticamente após cadastro
+  - **Cria seus treinos** — divisão, dias, exercícios, com histórico de alterações
+  - **Registra sua nutrição** — calorias, macros, refeições, controle de água
+  - **Define suas metas** — acompanha progresso manualmente
+  - **Organiza seu calendário** — exames, consultas, compromissos
+  - **Gerencia listas de compras** — semanal ou mensal
+  - **Recebe notificações** — lembretes de metas e eventos
+  
+  O sistema **não gera planos automaticamente**. O onboarding coleta dados básicos do perfil para referência.
   
   ---
   
   ## Arquitetura
-  O diagrama completo de comunicação entre os microsserviços está disponível no arquivo draw.io:
-  📎 [`docs/diagrams/fitplanner-communication.drawio`](docs/diagrams/fitplanner-communication.drawio)
   
-  > Para visualizar: abra no [draw.io](https://app.diagrams.net) (File → Open from → Device) ou no VS Code com a extensão **Draw.io Integration**.
+  📎 [`docs/diagrams/fitplanner-communication.excalidraw`](docs/diagrams/fitplanner-communication.excalidraw)
   
-  ![Diagrama de Arquitetura](docs/diagrams/fitplanner-communication.drawio.svg)
+  > Abra no [excalidraw.com](https://excalidraw.com) (Menu → Open) ou no VS Code com a extensão Excalidraw.
+  
+  ![Diagrama de Arquitetura](docs/diagrams/fitplanner-communication.png)
+  
+  > Exporte o `.excalidraw` como PNG e salve como `fitplanner-communication.png` para renderizar no GitHub.
+  
   ---
   
   ## Microsserviços
   
   | Serviço | Responsabilidade | Banco | Arquitetura |
   |---------|-----------------|-------|-------------|
-  | **user-service** | Cadastro, perfil, imagem, onboarding, autenticação OAuth2, autorização JWT | PostgreSQL | Hexagonal |
-  | **workout-service** | Divisão de treinos, exercícios, histórico de alterações | PostgreSQL | Hexagonal |
-  | **nutrition-service** | Registro nutricional, gastos calóricos, controle de água | PostgreSQL | Hexagonal |
-  | **goal-service** | Metas mensais, cálculo de cenário ideal | PostgreSQL | Hexagonal |
-  | **calendar-service** | Eventos, exames, compromissos, recorrência | MongoDB | Clean simplificada |
+  | **user-service** | Cadastro, perfil, imagem, onboarding, OAuth2, JWT | PostgreSQL | Hexagonal |
+  | **fit-service** | Treinos, exercícios, nutrição, água, metas, progresso | PostgreSQL | Hexagonal |
+  | **calendar-service** | Eventos, exames, compromissos | MongoDB | Clean simplificada |
   | **shopping-list-service** | Listas de compras semanal/mensal | MongoDB | Clean simplificada |
   | **notification-service** | Notificações (e-mail, push, in-app) | MongoDB | Clean simplificada |
   | **api-gateway** | Roteamento, validação JWT, rate limiting | — | — |
-  | **bff-service** | Composição de respostas para frontend | — | — |
+  | **bff-service** | Composição de respostas para frontend (futuro) | — | — |
   
   ---
   
@@ -66,7 +70,7 @@
   | Comunicação síncrona | OpenFeign |
   | Mensageria | AWS SQS |
   | Banco relacional | PostgreSQL |
-  | Banco não relacional | MongoDB |
+  | Banco documental | MongoDB |
   | Gateway | Spring Cloud Gateway |
   | Documentação API | Swagger / SpringDoc OpenAPI |
   | Containerização | Docker + Docker Compose |
@@ -80,35 +84,44 @@
   | Origem | Destino | Motivo |
   |--------|---------|--------|
   | bff-service | todos | Composição de telas para frontend |
-  | goal-service | nutrition-service | Buscar dados nutricionais para cálculo de metas |
   
   ### Assíncrona (AWS SQS)
   
-  | Produtor | Evento | Consumidor(es) |
-  |----------|--------|----------------|
-  | user-service | `onboarding.completed` | workout-service, nutrition-service, goal-service |
-  | nutrition-service | `nutrition.updated` | goal-service |
+  | Produtor | Evento | Consumidor |
+  |----------|--------|------------|
+  | fit-service | `goal.deadline.approaching` | notification-service |
   | calendar-service | `event.created` | notification-service |
-  | goal-service | `goal.deadline.approaching` | notification-service |
   
   ---
+  
+  ## Modelo de Dados
+  
+  Os modelos de entidade-relacionamento detalhados estão nos diagramas:
+  
+  📎 [`docs/diagrams/`](docs/diagrams/)
+  
+  ### Resumo por serviço
+  
+  | Serviço | Entidades principais |
+  |---------|---------------------|
+  | user-service | `users`, `user_profiles`, `roles`, `user_roles` |
+  | fit-service | `workout_splits`, `workout_days`, `exercises`, `exercise_history`, `daily_nutrition_logs`, `meals`, `nutrition_targets`, `goals`,
+  `goal_progress` |
+  | calendar-service | `events` (MongoDB) |
+  | shopping-list-service | `shopping_lists` (MongoDB) |
+  | notification-service | `notifications`, `notification_preferences` (MongoDB) |
+  
+  ---
+  
   ## ADRs — Decisões Arquiteturais
   
   ### ADR-001: Comunicação entre Microsserviços
   
   **Status:** Aceita
   
-  **Contexto:** Microsserviços precisam trocar dados. Algumas operações exigem resposta imediata, outras são eventuais.
-  
   **Decisão:**
-  - Comunicação síncrona via **OpenFeign** para operações que precisam de resposta imediata (ex: BFF compondo tela, goal-service buscando dados nutricionais)
-  - Comunicação assíncrona via **AWS SQS** para eventos que não precisam de resposta (ex: onboarding concluído, notificações)
-  
-  **Consequências:**
-  - Desacoplamento entre serviços para operações assíncronas
-  - Resiliência: falha em um consumidor não impacta o produtor
-  - Consistência eventual para dados propagados via eventos
-  - Custo de complexidade para monitorar filas e dead-letter queues
+  - OpenFeign para comunicação síncrona (BFF → serviços)
+  - AWS SQS para eventos assíncronos (notificações)
   
   ---
   
@@ -116,16 +129,9 @@
   
   **Status:** Aceita
   
-  **Contexto:** Nem todos os serviços possuem lógica de domínio complexa. Aplicar hexagonal em serviços CRUD gera over-engineering.
-  
   **Decisão:**
-  - **Hexagonal (Ports & Adapters):** user-service, workout-service, nutrition-service, goal-service
-  - **Clean simplificada (Controller → Service → Repository):** calendar-service, shopping-list-service, notification-service
-  
-  **Consequências:**
-  - Serviços com domínio rico ficam testáveis e isolados de frameworks
-  - Serviços simples mantêm agilidade no desenvolvimento
-  - Duas convenções de estrutura no projeto (documentadas)
+  - Hexagonal: user-service, fit-service (domínio rico)
+  - Clean simplificada: calendar, shopping-list, notification (CRUD)
   
   ---
   
@@ -133,34 +139,18 @@
   
   **Status:** Aceita
   
-  **Contexto:** O sistema precisa de autenticação segura e controle de acesso por papéis.
-  
   **Decisão:**
-  - **Spring Authorization Server** como provedor OAuth2, integrado ao user-service
-  - **JWT** como token de acesso (stateless)
-  - Validação de JWT no **API Gateway** (todas as requests são validadas antes de chegar aos serviços)
-  - Roles iniciais: `USER`, `ADMIN`
-  
-  **Consequências:**
-  - Tokens stateless eliminam necessidade de sessão compartilhada
-  - Gateway centraliza validação de segurança
-  - Serviços downstream confiam no token já validado (recebem claims via headers)
+  - Spring Authorization Server + OAuth2 integrado ao user-service
+  - JWT stateless, validado no API Gateway
+  - Roles: `USER`, `ADMIN`
   
   ---
   
-  ### ADR-004: Observabilidade (Futuro)
+  ### ADR-004: Observabilidade
   
   **Status:** Adiada
   
-  **Contexto:** Em produção, será necessário rastrear requests entre microsserviços e centralizar logs.
-  
-  **Decisão planejada:**
-  - Spring Actuator + Micrometer para métricas
-  - OpenTelemetry para tracing distribuído
-  - Logs centralizados (ELK ou CloudWatch)
-  
-  **Consequências:**
-  - Será implementado em fase posterior para não atrasar o MVP
+  **Decisão planejada:** Spring Actuator + Micrometer + OpenTelemetry + Logs centralizados
   
   ---
   
@@ -168,30 +158,30 @@
   
   **Status:** Aceita
   
-  **Contexto:** O frontend precisa de endpoints compostos e o sistema precisa de um ponto único de entrada.
-  
   **Decisão:**
-  - **Spring Cloud Gateway** como API Gateway (roteamento, JWT validation, rate limiting)
-  - **BFF Service** separado para composição de respostas voltadas ao frontend
+  - Spring Cloud Gateway como gateway
+  - BFF separado para composição de respostas ao frontend
   
-  **Consequências:**
-  - Gateway leve e focado em infraestrutura
-  - BFF absorve a complexidade de compor múltiplas chamadas
-  - Frontend faz poucas requests com payloads otimizados
+  ---
+  
+  ### ADR-006: Consolidação do fit-service
+  
+  **Status:** Aceita
+  
+  **Contexto:** Treinos, nutrição e metas pertencem ao mesmo contexto (plano do cliente). Separar em microsserviços distintos geraria comunicação
+  desnecessária e overhead de infraestrutura.
+  
+  **Decisão:** Unificar em um único **fit-service** que resolve tudo internamente com queries locais.
   
   ---
   
   ## Como Executar
   
   ```bash
-  # Clonar repositório
   git clone https://github.com/seu-usuario/fitplanner.git
   cd fitplanner
-  
-  # Subir infraestrutura local
   docker-compose up -d
   
-  # Cada serviço pode ser executado individualmente
   cd user-service
   ./mvnw spring-boot:run
   
@@ -201,19 +191,17 @@
   - Docker + Docker Compose
   - Maven 3.9+
   ```
-  ---
   
-  ## Roadmap
+  Roadmap
   
   - [x] Definição da arquitetura e microsserviços
   - [x] Modelagem de dados (MER/DER)
   - [x] Diagramas de comunicação e sequência
   - [x] Estrutura de pastas
   - [x] ADRs documentadas
-  - [ ] Implementação do user-service (auth + onboarding)
-  - [ ] Implementação do workout-service
-  - [ ] Implementação do nutrition-service
-  - [ ] Implementação do goal-service
+  - [x] Contratos de API
+  - [ ] Implementação do user-service
+  - [ ] Implementação do fit-service
   - [ ] Implementação do calendar-service
   - [ ] Implementação do shopping-list-service
   - [ ] Implementação do notification-service
@@ -222,3 +210,10 @@
   - [ ] Observabilidade (ADR-004)
   - [ ] Frontend
   
+  ---
+  
+  Licença
+  
+  Este projeto está licenciado sob a MIT License [![NPM](https://img.shields.io/npm/l/react)](https://github.com/Dev-JeanCharles/FitPlanner/blob/develop/LICENSE) .
+  
+  ---
