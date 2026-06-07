@@ -1,3 +1,4 @@
+[![NPM](https://img.shields.io/npm/l/react)](https://github.com/Dev-JeanCharles/FitPlanner/blob/master/LICENSE) 
  # 💪 FitPlanner
   
   Sistema baseado em microsserviços para controle completo de treinos, nutrição, metas e rotina de pessoas que praticam musculação.
