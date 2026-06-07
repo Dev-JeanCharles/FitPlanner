@@ -1,0 +1,39 @@
+@startuml sequence-nutrition
+  title Fluxo de Registro Nutricional - FitPlanner
+  
+  actor Cliente
+  participant "API Gateway" as GW
+  participant "nutrition-service" as NS
+  database "PostgreSQL" as DB
+  queue "AWS SQS" as SQS
+  participant "goal-service" as GS
+  
+  == Registrar refeição ==
+  
+  Cliente -> GW: POST /api/nutrition/meals\n{meal_type, description,\ncalories, protein, carbs, fat}
+  GW -> NS: forward (JWT validated)
+  NS -> DB: SELECT daily_nutrition_logs\nWHERE user_id AND log_date = today
+  alt Log não existe
+    NS -> DB: INSERT daily_nutrition_logs
+  end
+  NS -> DB: INSERT meals
+  NS -> DB: UPDATE daily_nutrition_logs\n(recalcula totais do dia)
+  NS -> SQS: publish "nutrition.updated"\n{user_id, log_date, totals}
+  NS --> GW: 201 Created
+  GW --> Cliente: 201 Created {meal}
+  
+  == Registrar água ==
+  
+  Cliente -> GW: PATCH /api/nutrition/water\n{amount_ml}
+  GW -> NS: forward
+  NS -> DB: UPDATE daily_nutrition_logs\nSET water_ml += amount_ml
+  NS --> GW: 200 OK {water_ml total}
+  GW --> Cliente: 200 OK
+  
+  == Goal-service reage ==
+  
+  SQS -> GS: consume "nutrition.updated"
+  GS -> GS: Recalcula progresso\nda meta atual
+  GS -> GS: Verifica se meta\nfoi atingida ou está em risco
+  
+  @enduml
